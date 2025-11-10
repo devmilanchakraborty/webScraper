@@ -11,12 +11,8 @@ import traceback
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, current_dir)
 
-try:
-    from scrape import DuckDuckGoScraper
-except ImportError as e:
-    # Fallback: try importing from parent
-    sys.path.insert(0, os.path.join(current_dir, '../../'))
-    from scrape import DuckDuckGoScraper
+# Import scrape module (it's in the same directory)
+from scrape import DuckDuckGoScraper
 
 scraper = None
 

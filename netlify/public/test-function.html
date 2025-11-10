@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Function</title>
+</head>
+<body>
+    <h1>Testing Netlify Function</h1>
+    <button onclick="testFunction()">Test Search Function</button>
+    <pre id="result"></pre>
+    
+    <script>
+        async function testFunction() {
+            const resultEl = document.getElementById('result');
+            resultEl.textContent = 'Testing...';
+            
+            try {
+                const response = await fetch('/.netlify/functions/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        type: 'text',
+                        query: 'test',
+                        max_results: 5
+                    })
+                });
+                
+                const text = await response.text();
+                resultEl.textContent = `Status: ${response.status}\n\nResponse:\n${text}`;
+            } catch (error) {
+                resultEl.textContent = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
+
