@@ -520,11 +520,20 @@
                 
                 const data = await response.json();
                 
+                // Check for errors in response
                 if (data.error) {
                     throw new Error(data.error);
                 }
                 
+                if (!data.success) {
+                    throw new Error(data.error || 'Search failed');
+                }
+                
                 currentResults = data.results || [];
+                
+                // Debug: log response
+                console.log('Search response:', { count: data.count, resultsLength: currentResults.length });
+                
                 displayResults(currentResults);
                 
             } catch (error) {

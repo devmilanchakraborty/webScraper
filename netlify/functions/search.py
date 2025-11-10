@@ -5,11 +5,18 @@ Netlify Serverless Function for DuckDuckGo Search
 import json
 import sys
 import os
+import traceback
 
-# Add parent directory to path to import scrape module
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../'))
+# Add current directory to path to import scrape module
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, current_dir)
 
-from scrape import DuckDuckGoScraper
+try:
+    from scrape import DuckDuckGoScraper
+except ImportError as e:
+    # Fallback: try importing from parent
+    sys.path.insert(0, os.path.join(current_dir, '../../'))
+    from scrape import DuckDuckGoScraper
 
 scraper = None
 
@@ -61,24 +68,42 @@ def handler(event, context):
         scraper = get_scraper()
         results = []
         
-        if search_type == 'text':
-            results = scraper.search(query, max_results=max_results, region=region)
-            if deep_scrape and results:
-                results = scraper.enhance_results_with_page_content(results, max_pages=max_pages)
-        elif search_type == 'images':
-            results = scraper.search_images(query, max_results=max_results)
-        elif search_type == 'news':
-            results = scraper.search_news(query, max_results=max_results, region=region)
-        elif search_type == 'videos':
-            results = scraper.search_videos(query, max_results=max_results, region=region)
-        else:
+        try:
+            if search_type == 'text':
+                results = scraper.search(query, max_results=max_results, region=region)
+                if deep_scrape and results:
+                    # Skip deep scrape on Netlify to avoid timeout
+                    # results = scraper.enhance_results_with_page_content(results, max_pages=max_pages)
+                    pass
+            elif search_type == 'images':
+                results = scraper.search_images(query, max_results=max_results)
+            elif search_type == 'news':
+                results = scraper.search_news(query, max_results=max_results, region=region)
+            elif search_type == 'videos':
+                results = scraper.search_videos(query, max_results=max_results, region=region)
+            else:
+                return {
+                    'statusCode': 400,
+                    'headers': {
+                        'Access-Control-Allow-Origin': '*',
+                        'Content-Type': 'application/json'
+                    },
+                    'body': json.dumps({'error': 'Invalid search type'})
+                }
+        except Exception as search_error:
+            # Return error but don't fail completely
             return {
-                'statusCode': 400,
+                'statusCode': 200,
                 'headers': {
                     'Access-Control-Allow-Origin': '*',
                     'Content-Type': 'application/json'
                 },
-                'body': json.dumps({'error': 'Invalid search type'})
+                'body': json.dumps({
+                    'success': False,
+                    'error': str(search_error),
+                    'results': [],
+                    'count': 0
+                })
             }
         
         return {
@@ -95,12 +120,18 @@ def handler(event, context):
         }
         
     except Exception as e:
+        # Better error reporting
+        error_details = {
+            'error': str(e),
+            'error_type': type(e).__name__,
+            'traceback': traceback.format_exc()
+        }
         return {
             'statusCode': 500,
             'headers': {
                 'Access-Control-Allow-Origin': '*',
                 'Content-Type': 'application/json'
             },
-            'body': json.dumps({'error': str(e)})
+            'body': json.dumps(error_details)
         }
 
