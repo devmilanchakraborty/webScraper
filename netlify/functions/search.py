@@ -29,6 +29,12 @@ def get_scraper():
 
 def handler(event, context):
     """Netlify function handler"""
+    # Default response headers
+    headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json'
+    }
+    
     try:
         # Handle CORS preflight
         if event.get('httpMethod') == 'OPTIONS':
@@ -39,15 +45,21 @@ def handler(event, context):
                     'Access-Control-Allow-Headers': 'Content-Type',
                     'Access-Control-Allow-Methods': 'POST, OPTIONS'
                 },
-                'body': ''
+                'body': json.dumps({})
             }
         
         # Parse request body
         body_str = event.get('body', '{}')
-        if isinstance(body_str, str):
-            body = json.loads(body_str)
-        else:
-            body = body_str if body_str else {}
+        if not body_str:
+            body_str = '{}'
+        
+        try:
+            if isinstance(body_str, str):
+                body = json.loads(body_str)
+            else:
+                body = body_str if body_str else {}
+        except json.JSONDecodeError:
+            body = {}
         search_type = body.get('type', 'text')
         query = body.get('query', '')
         max_results = int(body.get('max_results', 10))

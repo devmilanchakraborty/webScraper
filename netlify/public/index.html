@@ -518,7 +518,20 @@
                     body: JSON.stringify(payload)
                 });
                 
-                const data = await response.json();
+                // Check if response is ok
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                // Get response text first to handle empty responses
+                const responseText = await response.text();
+                let data;
+                try {
+                    data = responseText ? JSON.parse(responseText) : {};
+                } catch (e) {
+                    console.error('JSON parse error:', e, 'Response:', responseText);
+                    throw new Error('Invalid response from server');
+                }
                 
                 // Check for errors in response
                 if (data.error) {
