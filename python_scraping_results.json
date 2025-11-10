@@ -1,0 +1,27 @@
+[
+  {
+    "title": "Руководство по веб -скрейпингу на Python / Хабр",
+    "url": "https://habr.com/ru/companies/ruvds/articles/796885/",
+    "snippet": "Зачем использовать Python для веб -скрейпинга? Python широко используется в веб -скрейпинге благодаря своим преимуществам python -m venv my_ web _ scraping _env."
+  },
+  {
+    "title": "Python Web Scraping Tutorial - GeeksforGeeks",
+    "url": "https://www.geeksforgeeks.org/python/python-web-scraping-tutorial/",
+    "snippet": "In this tutorial, you'll learn how to use these Python tools to scrape data from websites and understand why Python 3 is a popular choice for web scraping tasks."
+  },
+  {
+    "title": "scrapy/scrapy: Scrapy, a fast high-level web crawling & scraping ...",
+    "url": "https://github.com/scrapy/scrapy",
+    "snippet": "Scrapy is a web scraping framework to extract structured data from websites . It is cross-platform, and requires Python 3.10+."
+  },
+  {
+    "title": "Python : основы скрапинга и парсинга",
+    "url": "https://proglib.io/p/samouchitel-po-python-dlya-nachinayushchih-chast-17-osnovy-skrapinga-i-parsinga-2023-03-13",
+    "snippet": "Примеры скрапинга и парсинга на Python . Экосистема Python располагает множеством инструментов для скрапинга и парсинга."
+  },
+  {
+    "title": "Sparta Coding Club] BE — Week 1 — Introduction to Python & Web ...",
+    "url": "https://medium.com/@srivastavdheeraj345/sparta-coding-club-be-week-1-introduction-to-python-web-scrapping-using-python-9e2af60cd9a5",
+    "snippet": "We also got information of python packages and utilized Beautiful Soup for web scraping tasks. and magaing the virtual environment. Week 1 — Try scraping the #1~50 songs of Billboard."
+  }
+]

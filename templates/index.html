@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DuckDuckGo Web Scraper</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            min-height: 600px;
+        }
+
+        .sidebar {
+            background: #f8f9fa;
+            padding: 30px;
+            border-right: 1px solid #e9ecef;
+        }
+
+        .search-form {
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .search-type-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-align: center;
+            min-width: 100px;
+        }
+
+        .tab-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .tab-btn:hover {
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-area {
+            padding: 30px;
+            overflow-y: auto;
+            max-height: calc(100vh - 200px);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .result-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .result-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .result-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .result-card a {
+            color: #667eea;
+            text-decoration: none;
+            word-break: break-all;
+            font-size: 0.9em;
+        }
+
+        .result-card a:hover {
+            text-decoration: underline;
+        }
+
+        .result-card p {
+            color: #666;
+            margin-top: 10px;
+            line-height: 1.6;
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .image-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        .image-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .image-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .image-card-info {
+            padding: 15px;
+        }
+
+        .image-card-info h4 {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        .image-card-info a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.85em;
+        }
+
+        .image-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            cursor: pointer;
+        }
+
+        .image-modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 90%;
+            max-height: 90%;
+        }
+
+        .image-modal-content img {
+            max-width: 100%;
+            max-height: 90vh;
+            border-radius: 8px;
+        }
+
+        .image-modal-close {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            color: white;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        .image-modal-close:hover {
+            color: #ccc;
+        }
+
+        .image-info {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px;
+            color: #999;
+        }
+
+        .no-results svg {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .save-btn {
+            margin-top: 20px;
+            background: #28a745;
+        }
+
+        .save-btn:hover {
+            background: #218838;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🦆 DuckDuckGo Web Scraper</h1>
+            <p>Search, scrape, and explore the web</p>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="search-type-tabs">
+                    <div class="tab-btn active" data-type="text">Text</div>
+                    <div class="tab-btn" data-type="images">Images</div>
+                    <div class="tab-btn" data-type="news">News</div>
+                    <div class="tab-btn" data-type="videos">Videos</div>
+                </div>
+
+                <form class="search-form" id="searchForm">
+                    <div class="form-group">
+                        <label for="query">Search Query</label>
+                        <input type="text" id="query" placeholder="Enter your search..." required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="maxResults">Number of Results</label>
+                        <input type="number" id="maxResults" value="10" min="1" max="50">
+                    </div>
+
+                    <div class="form-group" id="regionGroup">
+                        <label for="region">Region</label>
+                        <select id="region">
+                            <option value="us-en">United States (English)</option>
+                            <option value="uk-en">United Kingdom (English)</option>
+                            <option value="de-de">Germany (German)</option>
+                            <option value="fr-fr">France (French)</option>
+                            <option value="es-es">Spain (Spanish)</option>
+                            <option value="it-it">Italy (Italian)</option>
+                            <option value="ja-jp">Japan (Japanese)</option>
+                            <option value="zh-cn">China (Chinese)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="deepScrapeGroup" style="display: none;">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="deepScrape">
+                            <label for="deepScrape">Deep Scrape (Page Content)</label>
+                        </div>
+                        <input type="number" id="maxPages" value="3" min="1" max="10" style="margin-top: 10px;" placeholder="Max pages to scrape">
+                    </div>
+
+                    <button type="submit" class="btn" id="searchBtn">🔍 Search</button>
+                </form>
+            </div>
+
+            <div class="results-area" id="resultsArea">
+                <div class="no-results">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                    <h2>Start Searching</h2>
+                    <p>Enter a query and click search to get started</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div class="image-modal" id="imageModal">
+        <span class="image-modal-close" id="closeModal">&times;</span>
+        <div class="image-modal-content">
+            <img id="modalImage" src="" alt="Full size image">
+            <div class="image-info" id="imageInfo"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentSearchType = 'text';
+        let currentResults = [];
+
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentSearchType = btn.dataset.type;
+                
+                // Show/hide region and deep scrape based on search type
+                const regionGroup = document.getElementById('regionGroup');
+                const deepScrapeGroup = document.getElementById('deepScrapeGroup');
+                
+                if (currentSearchType === 'images' || currentSearchType === 'videos') {
+                    regionGroup.style.display = 'none';
+                    deepScrapeGroup.style.display = 'none';
+                } else {
+                    regionGroup.style.display = 'block';
+                    if (currentSearchType === 'text') {
+                        deepScrapeGroup.style.display = 'block';
+                    } else {
+                        deepScrapeGroup.style.display = 'none';
+                    }
+                }
+                
+                // Clear results
+                document.getElementById('resultsArea').innerHTML = `
+                    <div class="no-results">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                        <h2>Start Searching</h2>
+                        <p>Enter a query and click search to get started</p>
+                    </div>
+                `;
+            });
+        });
+
+        // Search form submission
+        document.getElementById('searchForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const query = document.getElementById('query').value;
+            const maxResults = parseInt(document.getElementById('maxResults').value);
+            const region = document.getElementById('region').value;
+            const deepScrape = document.getElementById('deepScrape').checked;
+            const maxPages = parseInt(document.getElementById('maxPages').value) || 3;
+            
+            if (!query.trim()) {
+                alert('Please enter a search query');
+                return;
+            }
+            
+            const resultsArea = document.getElementById('resultsArea');
+            const searchBtn = document.getElementById('searchBtn');
+            
+            // Show loading
+            resultsArea.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Searching for "${query}"...</p>
+                </div>
+            `;
+            searchBtn.disabled = true;
+            
+            try {
+                let endpoint = '';
+                let payload = { query, max_results: maxResults };
+                
+                switch(currentSearchType) {
+                    case 'text':
+                        endpoint = '/api/search';
+                        payload.region = region;
+                        payload.deep_scrape = deepScrape;
+                        payload.max_pages = maxPages;
+                        break;
+                    case 'images':
+                        endpoint = '/api/search/images';
+                        break;
+                    case 'news':
+                        endpoint = '/api/search/news';
+                        payload.region = region;
+                        break;
+                    case 'videos':
+                        endpoint = '/api/search/videos';
+                        payload.region = region;
+                        break;
+                }
+                
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                currentResults = data.results || [];
+                displayResults(currentResults);
+                
+            } catch (error) {
+                resultsArea.innerHTML = `
+                    <div class="error">
+                        <strong>Error:</strong> ${error.message}
+                    </div>
+                `;
+            } finally {
+                searchBtn.disabled = false;
+            }
+        });
+        
+        function displayResults(results) {
+            const resultsArea = document.getElementById('resultsArea');
+            
+            if (!results || results.length === 0) {
+                resultsArea.innerHTML = `
+                    <div class="no-results">
+                        <h2>No Results Found</h2>
+                        <p>Try a different search query</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            if (currentSearchType === 'images') {
+                displayImageResults(results);
+            } else {
+                displayTextResults(results);
+            }
+        }
+        
+        function displayTextResults(results) {
+            const resultsArea = document.getElementById('resultsArea');
+            let html = `<h2 style="margin-bottom: 20px;">Found ${results.length} results</h2>`;
+            
+            if (currentSearchType === 'text' || currentSearchType === 'news' || currentSearchType === 'videos') {
+                html += '<div class="results-grid">';
+                results.forEach((result, index) => {
+                    html += `
+                        <div class="result-card">
+                            <h3>${escapeHtml(result.title || 'No Title')}</h3>
+                            <a href="${result.url || '#'}" target="_blank">${result.url || 'No URL'}</a>
+                            <p>${escapeHtml((result.snippet || '').substring(0, 200))}...</p>
+                            ${result.hostname ? `<p style="color: #999; font-size: 0.85em;">${result.hostname}</p>` : ''}
+                            ${result.date ? `<p style="color: #999; font-size: 0.85em;">Date: ${result.date}</p>` : ''}
+                            ${result.duration ? `<p style="color: #999; font-size: 0.85em;">Duration: ${result.duration}</p>` : ''}
+                            ${result.channel ? `<p style="color: #999; font-size: 0.85em;">Channel: ${result.channel}</p>` : ''}
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            
+            html += `<button class="btn save-btn" onclick="saveResults()">💾 Save Results</button>`;
+            resultsArea.innerHTML = html;
+        }
+        
+        function displayImageResults(results) {
+            const resultsArea = document.getElementById('resultsArea');
+            let html = `<h2 style="margin-bottom: 20px;">Found ${results.length} images</h2>`;
+            html += '<div class="image-grid">';
+            
+            results.forEach((result, index) => {
+                const imageUrl = result.url || result.image || '';
+                const thumbnail = result.thumbnail || imageUrl;
+                const title = result.title || 'Untitled';
+                const source = result.source || result.url || '';
+                
+                html += `
+                    <div class="image-card" onclick="openImageModal('${escapeHtml(imageUrl)}', '${escapeHtml(title)}', '${escapeHtml(source)}')">
+                        <img src="${thumbnail}" alt="${escapeHtml(title)}" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'300\\' height=\\'200\\'%3E%3Crect fill=\\'%23ddd\\' width=\\'300\\' height=\\'200\\'/%3E%3Ctext fill=\\'%23999\\' font-family=\\'sans-serif\\' font-size=\\'14\\' dy=\\'10.5\\' font-weight=\\'bold\\' x=\\'50%25\\' y=\\'50%25\\' text-anchor=\\'middle\\'%3EImage not available%3C/text%3E%3C/svg%3E'">
+                        <div class="image-card-info">
+                            <h4>${escapeHtml(title.substring(0, 50))}${title.length > 50 ? '...' : ''}</h4>
+                            <a href="${source}" target="_blank">View Source</a>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            html += `<button class="btn save-btn" onclick="saveResults()" style="margin-top: 20px;">💾 Save Results</button>`;
+            resultsArea.innerHTML = html;
+        }
+        
+        function openImageModal(imageUrl, title, source) {
+            const modal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            const imageInfo = document.getElementById('imageInfo');
+            
+            modalImage.src = imageUrl;
+            imageInfo.innerHTML = `
+                <strong>${escapeHtml(title)}</strong><br>
+                <a href="${source}" target="_blank" style="color: #fff; text-decoration: underline;">View Source</a>
+            `;
+            modal.style.display = 'block';
+        }
+        
+        function closeImageModal() {
+            document.getElementById('imageModal').style.display = 'none';
+        }
+        
+        document.getElementById('closeModal').addEventListener('click', closeImageModal);
+        document.getElementById('imageModal').addEventListener('click', (e) => {
+            if (e.target.id === 'imageModal') {
+                closeImageModal();
+            }
+        });
+        
+        async function saveResults() {
+            if (!currentResults || currentResults.length === 0) {
+                alert('No results to save');
+                return;
+            }
+            
+            const filename = prompt('Enter filename (without extension):', `results_${Date.now()}`);
+            if (!filename) return;
+            
+            try {
+                const response = await fetch('/api/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        results: currentResults,
+                        filename: filename + '.json'
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    alert(`Results saved to ${data.filename}`);
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                alert('Error saving results: ' + error.message);
+            }
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
+
